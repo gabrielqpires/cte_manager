@@ -1,0 +1,16 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { queryMetabase } from '@/lib/metabase'
+import { extrairDados } from '@/lib/logcte'
+
+export async function POST(req: NextRequest) {
+  try {
+    const { awb } = await req.json()
+    if (!awb) return NextResponse.json({ error: 'AWB obrigatório' }, { status: 400 })
+    const rows = await queryMetabase(awb)
+    if (!rows.length) return NextResponse.json({ error: `AWB "${awb}" não encontrado` }, { status: 404 })
+    const dados = extrairDados(rows[0])
+    return NextResponse.json({ dados, totalCaixas: rows.length })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
+  }
+}
